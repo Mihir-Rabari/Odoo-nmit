@@ -1,4 +1,4 @@
-# Marketplace Application - Odoo x NMIT Virtual Round
+# EcoFinds - Odoo x NMIT Virtual Round
 
 A full-stack marketplace application built with React (TypeScript) frontend and Node.js/Express backend, featuring user authentication, product listings, image uploads, and purchase request management.
 
