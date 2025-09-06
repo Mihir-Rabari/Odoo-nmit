@@ -5,22 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingBag, Plus, Minus, X, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface CartItem {
-  id: number;
-  title: string;
-  price: number;
-  quantity: number;
-  imageUrl: string;
-  seller: string;
-}
+import { CartItem } from '@/contexts/CartContext';
 
 interface CartModalProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  onUpdateQuantity: (id: number, quantity: number) => void;
-  onRemoveItem: (id: number) => void;
+  onUpdateQuantity: (id: string, quantity: number) => void;
+  onRemoveItem: (id: string) => void;
 }
 
 export const CartModal = ({
@@ -33,11 +25,11 @@ export const CartModal = ({
   const { toast } = useToast();
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shipping = subtotal > 50 ? 0 : 9.99;
+  const shipping = subtotal > 1000 ? 0 : 99;
   const tax = subtotal * 0.08; // 8% tax
   const total = subtotal + shipping + tax;
 
-  const handleUpdateQuantity = (id: number, delta: number) => {
+  const handleUpdateQuantity = (id: string, delta: number) => {
     const item = cartItems.find(item => item.id === id);
     if (item) {
       const newQuantity = Math.max(1, item.quantity + delta);
@@ -45,7 +37,7 @@ export const CartModal = ({
     }
   };
 
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = (id: string) => {
     onRemoveItem(id);
     toast({
       title: "Item Removed",
@@ -111,7 +103,7 @@ export const CartModal = ({
                       </p>
                       <div className="flex items-center space-x-2">
                         <span className="font-semibold text-primary">
-                          ${item.price}
+                          ₹{item.price}
                         </span>
                         <span className="text-sm text-muted-foreground">
                           × {item.quantity}
@@ -165,37 +157,37 @@ export const CartModal = ({
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground">${subtotal.toFixed(2)}</span>
+                    <span className="text-foreground">₹{subtotal.toFixed(2)}</span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
                       Shipping
-                      {subtotal > 50 && (
+                      {subtotal > 1000 && (
                         <Badge variant="secondary" className="ml-2 text-xs">FREE</Badge>
                       )}
                     </span>
                     <span className="text-foreground">
-                      {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                      {shipping === 0 ? 'FREE' : `₹${shipping.toFixed(2)}`}
                     </span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Tax</span>
-                    <span className="text-foreground">${tax.toFixed(2)}</span>
+                    <span className="text-foreground">₹{tax.toFixed(2)}</span>
                   </div>
                   
                   <Separator />
                   
                   <div className="flex justify-between text-base font-semibold">
                     <span className="text-foreground">Total</span>
-                    <span className="text-primary">${total.toFixed(2)}</span>
+                    <span className="text-primary">₹{total.toFixed(2)}</span>
                   </div>
                 </div>
 
-                {subtotal < 50 && (
+                {subtotal < 1000 && (
                   <p className="text-xs text-muted-foreground">
-                    Add ${(50 - subtotal).toFixed(2)} more for free shipping
+                    Add ₹{(1000 - subtotal).toFixed(2)} more for free shipping
                   </p>
                 )}
               </div>

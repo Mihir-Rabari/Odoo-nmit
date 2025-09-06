@@ -1,7 +1,11 @@
+import React from 'react';
 import { useState } from 'react';
-import { Heart, MapPin, Clock, Star } from 'lucide-react';
+import { Heart, Star, MapPin, Clock, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useCart } from '@/contexts/CartContext';
+import { Link } from 'react-router-dom';
+import { formatPrice } from '@/lib/currency';
 
 interface ProductCardProps {
   id: number;
@@ -92,7 +96,7 @@ export const ProductCard = ({
         {/* Overlay Elements */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
           <Badge className={getConditionColor(condition)}>
-            {condition.charAt(0).toUpperCase() + condition.slice(1)}
+            {condition?.charAt(0)?.toUpperCase() + condition?.slice(1) || 'Good'}
           </Badge>
           <button
             onClick={handleToggleFavorite}
@@ -120,11 +124,11 @@ export const ProductCard = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-xl font-bold text-primary">
-                ${price}
+                {formatPrice(price)}
               </span>
               {originalPrice && originalPrice > price && (
                 <span className="text-sm text-muted-foreground line-through">
-                  ${originalPrice}
+                  {formatPrice(originalPrice)}
                 </span>
               )}
             </div>
@@ -159,15 +163,15 @@ export const ProductCard = ({
         <div className="flex items-center space-x-2 pt-2 border-t border-border/20">
           <div className="w-6 h-6 bg-secondary rounded-full flex items-center justify-center">
             <span className="text-xs font-semibold text-secondary-foreground">
-              {seller.name.charAt(0).toUpperCase()}
+              {seller?.name?.charAt(0)?.toUpperCase() || 'U'}
             </span>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-1">
               <span className="text-xs font-medium text-foreground truncate">
-                {seller.name}
+                {seller?.name || 'Unknown Seller'}
               </span>
-              {seller.verified && (
+              {seller?.verified && (
                 <div className="w-3 h-3 bg-primary rounded-full flex items-center justify-center">
                   <span className="text-[8px] text-primary-foreground">✓</span>
                 </div>
@@ -176,7 +180,7 @@ export const ProductCard = ({
             <div className="flex items-center space-x-1">
               <Star className="w-3 h-3 text-primary fill-primary" />
               <span className="text-xs text-muted-foreground">
-                {seller.rating.toFixed(1)}
+                {seller?.rating?.toFixed(1) || '4.5'}
               </span>
             </div>
           </div>

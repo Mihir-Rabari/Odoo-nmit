@@ -72,9 +72,9 @@ export const Header = () => {
               <PopoverTrigger asChild>
                 <button className="p-1 rounded-full hover:bg-accent transition-colors duration-200">
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
+                    <AvatarImage src={user.photoURL} alt={user.displayName} />
                     <AvatarFallback>
-                      {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                      {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </button>
@@ -83,24 +83,24 @@ export const Header = () => {
                 <div className="p-4 border-b border-border">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-12 h-12">
-                      <AvatarImage src={user.avatar} alt={`${user.firstName} ${user.lastName}`} />
+                      <AvatarImage src={user.photoURL} alt={user.displayName} />
                       <AvatarFallback className="text-sm">
-                        {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                        {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-medium text-foreground">
-                          {user.firstName} {user.lastName}
+                          {user.displayName || 'User'}
                         </span>
-                        {user.verified && <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1">
                             <Shield className="w-3 h-3 text-primary" />
                             <Badge variant="secondary" className="text-xs px-1 py-0">Verified</Badge>
-                          </div>}
+                          </div>
                       </div>
                       <div className="flex items-center gap-2 mb-1">
                         <Star className="w-3 h-3 text-primary fill-primary" />
-                        <span className="text-xs font-medium text-foreground">{user.rating}</span>
+                        <span className="text-xs font-medium text-foreground">5.0</span>
                         <span className="text-xs text-muted-foreground">rating</span>
                       </div>
                       <span className="text-xs text-muted-foreground">{user.email}</span>
@@ -111,11 +111,11 @@ export const Header = () => {
                   
                   <div className="grid grid-cols-2 gap-3">
                     <div className="text-center p-2 bg-muted/20 rounded-lg">
-                      <div className="text-lg font-bold text-primary">{user.totalSales}</div>
+                      <div className="text-lg font-bold text-primary">0</div>
                       <div className="text-xs text-muted-foreground">Items Sold</div>
                     </div>
                     <div className="text-center p-2 bg-muted/20 rounded-lg">
-                      <div className="text-lg font-bold text-primary">{user.totalPurchases}</div>
+                      <div className="text-lg font-bold text-primary">0</div>
                       <div className="text-xs text-muted-foreground">Purchased</div>
                     </div>
                   </div>
@@ -138,7 +138,17 @@ export const Header = () => {
             </Popover>
 
             {/* Cart */}
-            
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-foreground hover:text-primary transition-colors duration-200"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
+            </button>
 
             {/* Mobile Menu Button */}
             <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden p-2 text-foreground hover:text-primary transition-colors duration-200">

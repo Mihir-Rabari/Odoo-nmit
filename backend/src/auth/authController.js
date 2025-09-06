@@ -1,23 +1,42 @@
-const admin = require('../config/firebase');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { generateAuthTokens } = require('./authMiddleware');
+
+const generateAuthTokens = (user) => {
+  const accessToken = jwt.sign(
+    { userId: user._id, email: user.email, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m' }
+  );
+  
+  const refreshToken = jwt.sign(
+    { userId: user._id },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_REFRESH_EXPIRES || '30d' }
+  );
+  
+  return { accessToken, refreshToken };
+};
 
 const registerUser = async (req, res) => {
   const { email, password, displayName, photoURL } = req.body;
 
   try {
-    const userRecord = await admin.auth().createUser({
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists with this email' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Create user
+    const user = await User.create({
       email,
-      password,
+      password: hashedPassword,
       displayName,
       photoURL,
-    });
-
-    const user = await User.create({
-      firebaseUid: userRecord.uid,
-      email: userRecord.email,
-      displayName: userRecord.displayName,
-      photoURL: userRecord.photoURL,
     });
 
     const { accessToken, refreshToken } = generateAuthTokens(user);
@@ -28,6 +47,7 @@ const registerUser = async (req, res) => {
         _id: user._id,
         email: user.email,
         displayName: user.displayName,
+        photoURL: user.photoURL,
         role: user.role,
       },
       accessToken,
@@ -39,22 +59,19 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { idToken } = req.body; // Firebase ID token from client-side
+  const { email, password } = req.body;
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const firebaseUid = decodedToken.uid;
-
-    let user = await User.findOne({ firebaseUid });
-
+    // Find user by email
+    const user = await User.findOne({ email });
     if (!user) {
-      // If user doesn't exist in our DB, create them (e.g., first time login with Google)
-      user = await User.create({
-        firebaseUid: decodedToken.uid,
-        email: decodedToken.email,
-        displayName: decodedToken.name,
-        photoURL: decodedToken.picture,
-      });
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Check password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     const { accessToken, refreshToken } = generateAuthTokens(user);
@@ -65,13 +82,14 @@ const loginUser = async (req, res) => {
         _id: user._id,
         email: user.email,
         displayName: user.displayName,
+        photoURL: user.photoURL,
         role: user.role,
       },
       accessToken,
       refreshToken,
     });
   } catch (error) {
-    res.status(401).json({ message: 'Authentication failed', error: error.message });
+    res.status(500).json({ message: 'Authentication failed', error: error.message });
   }
 };
 

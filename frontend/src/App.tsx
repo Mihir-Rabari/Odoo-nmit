@@ -7,9 +7,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import { LoginPage } from "./pages/LoginPage";
+import { SignupPage } from "./pages/SignupPage";
 import { MarketplacePage } from "./pages/MarketplacePage";
 import { DashboardPage } from "./pages/DashboardPage";
-import { ProductPage } from "./pages/ProductPage";
+import { ProductPage } from "./pages/ProductPageNew";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/product/:id" element={<ProductPage />} />

@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Layout } from '@/components/Layout';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
+import { api, transformProductToFrontend } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 // Sample marketplace data
 const categories = ['All Categories', 'Furniture', 'Electronics', 'Fashion', 'Books', 'Music', 'Home & Garden', 'Sports', 'Toys'];
@@ -109,52 +111,78 @@ const sampleProducts = [{
 }];
 export const MarketplacePage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [filteredProducts, setFilteredProducts] = useState(sampleProducts);
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [favorites, setFavorites] = useState<number[]>([]);
+
+  // Fetch products from API
   useEffect(() => {
-    setIsLoading(true);
-    // Simulate API call delay
-    const timer = setTimeout(() => {
-      let filtered = sampleProducts;
-
-      // Filter by search query
-      if (searchQuery) {
-        filtered = filtered.filter(product => product.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const backendProducts = await api.getProducts();
+        const transformedProducts = backendProducts.map(transformProductToFrontend);
+        setAllProducts(transformedProducts);
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load products. Using sample data.",
+          variant: "destructive",
+        });
+        // Fallback to sample data if API fails
+        setAllProducts(sampleProducts);
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      // Filter by category
-      if (selectedCategory !== 'All Categories') {
-        filtered = filtered.filter(product => product.category === selectedCategory);
-      }
+    fetchProducts();
+  }, [toast]);
 
-      // Sort products
-      switch (sortBy) {
-        case 'price-low':
-          filtered.sort((a, b) => a.price - b.price);
-          break;
-        case 'price-high':
-          filtered.sort((a, b) => b.price - a.price);
-          break;
-        case 'rating':
-          filtered.sort((a, b) => b.rating - a.rating);
-          break;
-        case 'newest':
-        default:
-          // Keep original order (newest first)
-          break;
-      }
-      setFilteredProducts(filtered);
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategory, sortBy]);
+  // Filter and sort products
+  useEffect(() => {
+    let filtered = [...allProducts];
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(product => 
+        product.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by category
+    if (selectedCategory !== 'All Categories') {
+      filtered = filtered.filter(product => product.category === selectedCategory);
+    }
+
+    // Sort products
+    switch (sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'rating':
+        filtered.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'newest':
+      default:
+        // Keep original order (newest first)
+        break;
+    }
+    
+    setFilteredProducts(filtered);
+  }, [allProducts, searchQuery, selectedCategory, sortBy]);
   const handleAddToCart = (id: number) => {
     console.log('Added to cart:', id);
   };

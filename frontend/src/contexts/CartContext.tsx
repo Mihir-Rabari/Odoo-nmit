@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 // Cart item type
 export interface CartItem {
-  id: number;
+  id: string;
   title: string;
   price: number;
   quantity: number;
@@ -15,39 +17,21 @@ interface CartContextType {
   cartItems: CartItem[];
   cartItemCount: number;
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  updateQuantity: (id: number, quantity: number) => void;
-  removeItem: (id: number) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  removeItem: (id: string) => void;
   clearCart: () => void;
+  checkout: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
-
-// Sample cart items
-const sampleCartItems: CartItem[] = [
-  {
-    id: 1,
-    title: "Vintage Danish Modern Dining Chair",
-    price: 145,
-    quantity: 1,
-    imageUrl: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop",
-    seller: "Sarah Chen"
-  },
-  {
-    id: 2,
-    title: "Professional Camera Kit",
-    price: 650,
-    quantity: 1,
-    imageUrl: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&h=400&fit=crop",
-    seller: "Photo Pro"
-  }
-];
 
 interface CartProviderProps {
   children: ReactNode;
 }
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>(sampleCartItems);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { toast } = useToast();
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -63,9 +47,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       }
       return [...prev, { ...newItem, quantity: 1 }];
     });
+    
+    toast({
+      title: "Added to Cart",
+      description: `${newItem.title} has been added to your cart`,
+    });
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       removeItem(id);
       return;
@@ -77,12 +66,40 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     );
   };
 
-  const removeItem = (id: number) => {
+  const removeItem = (id: string) => {
     setCartItems(prev => prev.filter(item => item.id !== id));
   };
 
   const clearCart = () => {
     setCartItems([]);
+  };
+
+  const checkout = async () => {
+    try {
+      const orderData = {
+        products: cartItems.map(item => ({
+          product: item.id,
+          quantity: item.quantity
+        })),
+        shippingAddress: "Default shipping address" // In a real app, this would come from user input
+      };
+
+      await api.createOrder(orderData);
+      
+      toast({
+        title: "Order Placed Successfully",
+        description: "Your order has been placed and is being processed.",
+      });
+      
+      clearCart();
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      toast({
+        title: "Checkout Failed",
+        description: "There was an error processing your order. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const value = {
@@ -92,6 +109,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     updateQuantity,
     removeItem,
     clearCart,
+    checkout,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

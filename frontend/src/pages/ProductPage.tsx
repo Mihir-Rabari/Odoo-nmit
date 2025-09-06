@@ -1,109 +1,72 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Layout } from '@/components/Layout';
+import { ArrowLeft, Heart, ShoppingCart, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Heart, MapPin, Clock, Star, Shield, Share2, MessageCircle, ArrowLeft } from 'lucide-react';
+import { Layout } from '@/components/Layout';
+import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import { useToast } from '@/hooks/use-toast';
 
-// Mock product data - in a real app, this would come from an API
-const mockProducts = [
-  {
-    id: 1,
-    title: "Vintage Leather Jacket",
-    price: 89,
-    originalPrice: 120,
-    category: "Fashion",
-    location: "New York, NY",
-    timeAgo: "2 hours ago",
-    rating: 4.8,
-    imageUrl: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=800&fit=crop",
-    seller: {
-      name: "Sarah Johnson",
-      rating: 4.9,
-      verified: true
-    },
-    condition: "excellent" as const,
-    description: `This vintage leather jacket is in excellent condition and has been well-maintained. Perfect for anyone looking for authentic vintage fashion at great prices.
-
-Key Features:
-• Genuine leather construction
-• Classic vintage styling
-• Well-maintained condition
-• Authentic vintage piece
-• Ready for immediate wear
-
-About the Seller:
-Our verified seller has an excellent track record with a 4.9 star rating. All items are accurately described and shipped promptly.`,
-    images: [
-      "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1520975954732-35dd22299614?w=800&h=800&fit=crop"
-    ]
-  },
-  {
-    id: 2,
-    title: "Professional Camera Lens",
-    price: 450,
-    originalPrice: 600,
-    category: "Electronics",
-    location: "Los Angeles, CA",
-    timeAgo: "5 hours ago",
-    rating: 4.9,
-    imageUrl: "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=800&h=800&fit=crop",
-    seller: {
-      name: "Mike Chen",
-      rating: 4.8,
-      verified: true
-    },
-    condition: "good" as const,
-    description: `Professional camera lens in good condition. Has been used professionally but well-maintained. Perfect for photographers looking for quality equipment at affordable prices.
-
-Key Features:
-• Professional grade optics
-• Excellent image quality
-• Compatible with major camera brands
-• Includes lens caps and filter
-• Ready for professional use
-
-About the Seller:
-Our verified seller is a professional photographer with excellent ratings and fast shipping.`,
-    images: [
-      "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&h=800&fit=crop"
-    ]
-  }
-];
+// Product type matching backend API
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
+  stock: number;
+}
 
 export const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<any>(null);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const { toast } = useToast();
+  const { addToCart } = useCart();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Find product by ID
-    const foundProduct = mockProducts.find(p => p.id === parseInt(id || ''));
-    if (foundProduct) {
-      setProduct(foundProduct);
-    } else {
-      navigate('/marketplace');
-    }
-  }, [id, navigate]);
+    const fetchProduct = async () => {
+      if (!id) {
+        navigate('/marketplace');
+        return;
+      }
 
-  if (!product) {
+      try {
+        setLoading(true);
+        const backendProduct = await apiClient.getProduct(id);
+        setProduct(backendProduct);
+      } catch (error) {
+        console.error('Failed to fetch product:', error);
+        toast({
+          title: "Error",
+          description: "Product not found",
+          variant: "destructive",
+        });
+        navigate('/marketplace');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id, navigate, toast]);
+
+  if (loading || !product) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground">Product not found</h1>
-            <Button onClick={() => navigate('/marketplace')} className="mt-4">
-              Return to Marketplace
-            </Button>
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading product...</p>
+            </div>
           </div>
         </div>
       </Layout>
@@ -222,12 +185,12 @@ export const ProductPage = () => {
             <div className="space-y-2">
               <div className="flex items-center space-x-3">
                 <span className="text-4xl font-bold text-primary">
-                  ${product.price}
+                  {formatPrice(product.price)}
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
                   <>
                     <span className="text-xl text-muted-foreground line-through">
-                      ${product.originalPrice}
+                      {formatPrice(product.originalPrice)}
                     </span>
                     <Badge variant="secondary">
                       {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% off
