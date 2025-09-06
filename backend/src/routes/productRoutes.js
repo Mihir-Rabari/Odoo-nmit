@@ -1,15 +1,19 @@
 const express = require('express');
 const Product = require('../models/Product');
 const { protect, authorize } = require('../auth/authMiddleware');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
 // Get all products
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find({});
+    console.log('Fetching all products');
+    const products = await Product.find({}).populate('seller', 'displayName email');
+    console.log(`Found ${products.length} products`);
     res.json(products);
   } catch (error) {
+    console.error('Error fetching products:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -17,14 +21,36 @@ router.get('/', async (req, res) => {
 // Get single product by ID
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    console.log('Fetching product by ID:', req.params.id);
+    const product = await Product.findById(req.params.id).populate('seller', 'displayName email phone location rating');
     if (product) {
+      console.log('Product found:', product.name);
       res.json(product);
     } else {
+      console.log('Product not found');
       res.status(404).json({ message: 'Product not found' });
     }
   } catch (error) {
+    console.error('Error fetching product:', error);
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Upload image endpoint
+router.post('/upload', protect, upload.single('image'), async (req, res) => {
+  try {
+    console.log('Image upload request received');
+    if (!req.file) {
+      console.error('No file uploaded');
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    console.log('File uploaded successfully:', req.file.filename);
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ imageUrl });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ message: 'Failed to upload image', error: error.message });
   }
 });
 
@@ -32,6 +58,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', protect, authorize('user', 'admin'), async (req, res) => {
   const { name, description, price, category, imageUrl, stock } = req.body;
   try {
+    console.log('Creating product:', { name, description, price, category, seller: req.user._id });
     const product = new Product({
       name,
       description,
@@ -42,8 +69,10 @@ router.post('/', protect, authorize('user', 'admin'), async (req, res) => {
       seller: req.user._id, // Seller is the logged-in user
     });
     const createdProduct = await product.save();
+    console.log('Product created successfully:', createdProduct._id);
     res.status(201).json(createdProduct);
   } catch (error) {
+    console.error('Error creating product:', error);
     res.status(400).json({ message: error.message });
   }
 });

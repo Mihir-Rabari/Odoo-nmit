@@ -19,42 +19,49 @@ const generateAuthTokens = (user) => {
 };
 
 const registerUser = async (req, res) => {
-  const { email, password, displayName, photoURL, firstName, lastName } = req.body;
-
   try {
+    console.log('Registration request received:', req.body.email);
+    const { email, password, displayName, firstName, lastName, photoURL } = req.body;
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists with this email' });
+      console.log('User already exists:', email);
+      return res.status(400).json({ message: 'User already exists' });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user with default profile values
-    const user = await User.create({
+    // Create user
+    const user = new User({
       email,
       password: hashedPassword,
-      displayName,
+      displayName: displayName || email.split('@')[0],
+      firstName: firstName || displayName?.split(' ')[0] || email.split('@')[0],
+      lastName: lastName || displayName?.split(' ').slice(1).join(' ') || '',
       photoURL,
-      firstName: firstName || displayName.split(' ')[0] || 'User',
-      lastName: lastName || displayName.split(' ')[1] || 'Name',
+      role: 'user',
+      location: 'Not specified',
+      rating: 0,
+      totalSales: 0,
+      totalPurchases: 0
     });
 
-    const { accessToken, refreshToken } = generateAuthTokens(user);
+    await user.save();
+    console.log('User registered successfully:', user._id);
 
-    // Return full user profile data
-    const userResponse = user.toJSON();
-    delete userResponse.password;
+    // Generate tokens
+    const tokens = generateAuthTokens(user);
 
     res.status(201).json({
-      message: 'User registered successfully',
-      user: userResponse,
-      accessToken,
-      refreshToken,
+      user,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
   }
 };
 
@@ -62,32 +69,33 @@ const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    console.log('Login request received:', email);
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      console.log('User not found:', email);
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      console.log('Password mismatch for user:', email);
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const { accessToken, refreshToken } = generateAuthTokens(user);
+    console.log('User logged in successfully:', user._id);
+    // Generate tokens
+    const tokens = generateAuthTokens(user);
 
-    // Return full user profile data
-    const userResponse = user.toJSON();
-    delete userResponse.password;
-
-    res.status(200).json({
-      message: 'Login successful',
-      user: userResponse,
-      accessToken,
-      refreshToken,
+    res.json({
+      user,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken
     });
   } catch (error) {
-    res.status(500).json({ message: 'Authentication failed', error: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error during login' });
   }
 };
 

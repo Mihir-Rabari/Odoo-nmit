@@ -7,7 +7,7 @@ const router = express.Router();
 // Get all users (Admin only)
 router.get('/', protect, authorize('admin'), async (req, res) => {
   try {
-    const users = await User.find({}).select('-firebaseUid'); // Exclude firebaseUid from response
+    const users = await User.find({}).select('-password'); // Exclude password from response
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -17,7 +17,7 @@ router.get('/', protect, authorize('admin'), async (req, res) => {
 // Get user profile (Logged-in user)
 router.get('/profile', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-firebaseUid');
+    const user = await User.findById(req.user._id).select('-password');
     if (user) {
       res.json({
         _id: user._id,

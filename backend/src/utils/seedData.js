@@ -61,8 +61,14 @@ const sampleUser = {
   email: 'seller@example.com',
   password: bcrypt.hashSync('password123', 12),
   displayName: 'Sample Seller',
+  firstName: 'Sample',
+  lastName: 'Seller',
   photoURL: 'https://images.unsplash.com/photo-1494790108755-2616b612b5bc?w=400&h=400&fit=crop',
-  role: 'user'
+  role: 'user',
+  location: 'Mumbai, India',
+  rating: 4.5,
+  totalSales: 0,
+  totalPurchases: 0
 };
 
 const seedDatabase = async () => {

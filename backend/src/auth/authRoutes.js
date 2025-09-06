@@ -1,5 +1,7 @@
 const express = require('express');
-const { registerUser, loginUser, updateUserProfile } = require('./authController');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+const { registerUser, loginUser, updateUserProfile, generateAuthTokens } = require('./authController');
 const { protect } = require('./authMiddleware');
 
 const router = express.Router();
