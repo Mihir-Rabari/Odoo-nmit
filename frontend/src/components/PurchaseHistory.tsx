@@ -1,47 +1,50 @@
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Star, Package, MessageCircle, RefreshCw } from 'lucide-react';
+import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Sample purchase history
-const samplePurchases = [
-  {
-    id: 1,
-    title: "Antique Oak Bookshelf",
-    price: 275,
-    seller: "Antique Finds",
-    purchaseDate: "2024-01-15",
-    status: "delivered",
-    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop",
-    trackingNumber: "TRK123456789",
-  },
-  {
-    id: 2,
-    title: "Professional Camera Kit",
-    price: 650,
-    seller: "Photo Pro",
-    purchaseDate: "2024-01-12",
-    status: "shipped",
-    imageUrl: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&h=400&fit=crop",
-    trackingNumber: "TRK987654321",
-  },
-  {
-    id: 3,
-    title: "Rare Vinyl Collection",
-    price: 320,
-    seller: "Music Collector",
-    purchaseDate: "2024-01-10",
-    status: "processing",
-    imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop",
-  }
-];
 
 export const PurchaseHistory = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [purchases, setPurchases] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch user's orders from API
+  useEffect(() => {
+    const fetchPurchases = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      try {
+        const orders = await api.getAllOrders();
+        setPurchases(orders as any[]);
+      } catch (error) {
+        console.error('Failed to fetch purchase history:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load purchase history",
+          variant: "destructive",
+        });
+        setPurchases([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPurchases();
+  }, [user, toast]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered': return 'bg-secondary text-secondary-foreground';
       case 'shipped': return 'bg-primary text-primary-foreground';
       case 'processing': return 'bg-accent text-accent-foreground';
+      case 'pending': return 'bg-muted text-muted-foreground';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -65,7 +68,24 @@ export const PurchaseHistory = () => {
         <p className="text-muted-foreground">Track your orders and manage purchases</p>
       </div>
 
-      {samplePurchases.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="product-card animate-pulse">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-6">
+                  <div className="w-20 h-20 bg-muted rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                    <div className="h-3 bg-muted rounded w-1/4" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : purchases.length === 0 ? (
         <Card className="feature-card text-center py-12">
           <CardContent>
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
@@ -82,7 +102,7 @@ export const PurchaseHistory = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {samplePurchases.map((purchase) => (
+          {purchases.map((purchase) => (
             <Card key={purchase.id} className="product-card">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-6">

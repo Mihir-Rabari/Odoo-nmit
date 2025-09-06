@@ -4,8 +4,10 @@ import { SellItemForm } from '@/components/SellItemForm';
 import { MyListings } from '@/components/MyListings';
 import { PurchaseHistory } from '@/components/PurchaseHistory';
 import { ProfileSection } from '@/components/ProfileSection';
+import { PurchaseRequests } from '@/components/PurchaseRequests';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Plus, ShoppingBag, User } from 'lucide-react';
+import { Package, Plus, ShoppingBag, User, MessageSquare } from 'lucide-react';
+
 export const DashboardPage = () => {
   return <Layout>
       <div className="pt-20 min-h-screen">
@@ -23,7 +25,7 @@ export const DashboardPage = () => {
 
             {/* Tabs */}
             <Tabs defaultValue="sell" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsList className="grid w-full grid-cols-4 mb-8">
                 <TabsTrigger value="sell" className="flex items-center space-x-2">
                   <Plus className="w-4 h-4" />
                   <span>Sell Item</span>
@@ -31,6 +33,10 @@ export const DashboardPage = () => {
                 <TabsTrigger value="listings" className="flex items-center space-x-2">
                   <Package className="w-4 h-4" />
                   <span>My Listings</span>
+                </TabsTrigger>
+                <TabsTrigger value="requests" className="flex items-center space-x-2">
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Purchase Requests</span>
                 </TabsTrigger>
                 <TabsTrigger value="purchases" className="flex items-center space-x-2">
                   <ShoppingBag className="w-4 h-4" />
@@ -44,6 +50,10 @@ export const DashboardPage = () => {
 
               <TabsContent value="listings">
                 <MyListings />
+              </TabsContent>
+
+              <TabsContent value="requests">
+                <PurchaseRequests />
               </TabsContent>
 
               <TabsContent value="purchases">

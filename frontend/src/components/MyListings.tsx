@@ -1,46 +1,60 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Edit, Trash2, Eye, MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-
-// Sample user listings
-const sampleListings = [
-  {
-    id: 1,
-    title: "Vintage Danish Modern Dining Chair",
-    price: 145,
-    status: "active",
-    views: 24,
-    likes: 8,
-    imageUrl: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop",
-    createdAt: "2024-01-10",
-  },
-  {
-    id: 2,
-    title: "MacBook Pro 13\" 2019",
-    price: 899,
-    status: "sold",
-    views: 156,
-    likes: 32,
-    imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop",
-    createdAt: "2024-01-08",
-  },
-  {
-    id: 3,
-    title: "Designer Leather Handbag",
-    price: 180,
-    status: "pending",
-    views: 45,
-    likes: 12,
-    imageUrl: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop",
-    createdAt: "2024-01-12",
-  }
-];
+import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const MyListings = () => {
-  const [listings, setListings] = useState(sampleListings);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [listings, setListings] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch user's products from API
+  useEffect(() => {
+    const fetchUserListings = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      try {
+        const allProducts = await api.getProducts();
+        // Filter products by current user (seller)
+        const userProducts = allProducts.filter((product: any) => 
+          product.seller && product.seller._id === user._id
+        );
+        
+        // Transform to match listing format
+        const transformedListings = userProducts.map((product: any) => ({
+          id: product._id,
+          title: product.name,
+          price: product.price,
+          status: product.stock > 0 ? "active" : "sold",
+          views: Math.floor(Math.random() * 100) + 10, // Mock views for now
+          likes: Math.floor(Math.random() * 20) + 1, // Mock likes for now
+          imageUrl: product.imageUrl || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop',
+          createdAt: product.createdAt,
+        }));
+        
+        setListings(transformedListings);
+      } catch (error) {
+        console.error('Failed to fetch user listings:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load your listings",
+          variant: "destructive",
+        });
+        setListings([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserListings();
+  }, [user, toast]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -55,8 +69,22 @@ export const MyListings = () => {
     console.log('Edit listing:', id);
   };
 
-  const handleDelete = (id: number) => {
-    setListings(prev => prev.filter(listing => listing.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await api.deleteProduct(id);
+      setListings(prev => prev.filter(listing => listing.id !== id));
+      toast({
+        title: "Success",
+        description: "Listing deleted successfully",
+      });
+    } catch (error) {
+      console.error('Failed to delete listing:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete listing",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleView = (id: number) => {
@@ -73,7 +101,22 @@ export const MyListings = () => {
         <Button className="btn-hero">Create New Listing</Button>
       </div>
 
-      {listings.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="product-card animate-pulse">
+              <CardContent className="p-0">
+                <div className="aspect-square bg-muted rounded-t-xl" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-6 bg-muted rounded w-1/2" />
+                  <div className="h-3 bg-muted rounded w-1/4" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : listings.length === 0 ? (
         <Card className="feature-card text-center py-12">
           <CardContent>
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">

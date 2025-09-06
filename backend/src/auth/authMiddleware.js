@@ -3,12 +3,12 @@ const User = require('../models/User');
 
 const generateAuthTokens = (user) => {
   const accessToken = jwt.sign(
-    { id: user._id, role: user.role },
+    { userId: user._id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_ACCESS_EXPIRES }
   );
   const refreshToken = jwt.sign(
-    { id: user._id, role: user.role },
+    { userId: user._id, email: user.email, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_REFRESH_EXPIRES }
   );
@@ -21,18 +21,26 @@ const protect = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
+      console.log('Token received:', token ? 'Present' : 'Missing');
+      
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password');
+      console.log('Token decoded, user ID:', decoded.userId);
+      
+      req.user = await User.findById(decoded.userId).select('-password');
       
       if (!req.user) {
+        console.log('User not found in database for ID:', decoded.userId);
         return res.status(401).json({ message: 'User not found' });
       }
       
+      console.log('User authenticated:', req.user.email);
       next();
     } catch (error) {
+      console.error('Token verification failed:', error.message);
       return res.status(401).json({ message: 'Not authorized, token failed' });
     }
   } else {
+    console.log('No authorization header or invalid format');
     return res.status(401).json({ message: 'Not authorized, no token' });
   }
 };

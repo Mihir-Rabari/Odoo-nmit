@@ -36,8 +36,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Upload image endpoint
-router.post('/upload', protect, upload.single('image'), async (req, res) => {
+// Upload image endpoint (no authentication required)
+router.post('/upload', upload.single('image'), async (req, res) => {
   try {
     console.log('Image upload request received');
     if (!req.file) {
@@ -46,7 +46,7 @@ router.post('/upload', protect, upload.single('image'), async (req, res) => {
     }
 
     console.log('File uploaded successfully:', req.file.filename);
-    const imageUrl = `/uploads/${req.file.filename}`;
+    const imageUrl = `http://localhost:4000/uploads/${req.file.filename}`;
     res.json({ imageUrl });
   } catch (error) {
     console.error('Error uploading image:', error);

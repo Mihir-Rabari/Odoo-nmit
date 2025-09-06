@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Layout } from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { GoogleSignInButton } from '@/components/GoogleSignInButton';
 
 export const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -204,6 +205,21 @@ export const SignupPage = () => {
                 )}
               </Button>
             </form>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border/20" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-card px-4 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Social Login */}
+            <div className="space-y-3">
+              <GoogleSignInButton className="btn-secondary-hero" />
+            </div>
 
             {/* Sign In Link */}
             <div className="text-center mt-6">

@@ -28,6 +28,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   updateUser: (userData: Partial<User>) => void;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,8 +54,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const storedUser = localStorage.getItem('user');
     const accessToken = localStorage.getItem('accessToken');
     
+    console.log('AuthContext: Checking stored auth data');
+    console.log('Stored user:', storedUser ? 'Present' : 'Missing');
+    console.log('Access token:', accessToken ? 'Present' : 'Missing');
+    
     if (storedUser && accessToken) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        console.log('AuthContext: Setting user from storage:', parsedUser.email);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('AuthContext: Error parsing stored user data:', error);
+        localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      }
     }
     setLoading(false);
   }, []);
@@ -93,6 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -116,6 +131,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     isAuthenticated: !!user,
     updateUser,
+    setUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

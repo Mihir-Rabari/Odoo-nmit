@@ -75,7 +75,7 @@ const userSchema = new mongoose.Schema({
 
 // Add virtual for memberSince
 userSchema.virtual('memberSince').get(function() {
-  return this.createdAt.getFullYear().toString();
+  return this.createdAt ? this.createdAt.getFullYear().toString() : new Date().getFullYear().toString();
 });
 
 // Ensure virtual fields are serialized

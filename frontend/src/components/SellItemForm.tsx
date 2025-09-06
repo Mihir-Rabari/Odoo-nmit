@@ -58,7 +58,7 @@ export const SellItemForm = () => {
     }
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
     if (selectedImages.length + files.length > 5) {
@@ -70,18 +70,52 @@ export const SellItemForm = () => {
       return;
     }
 
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const imageUrl = event.target?.result as string;
+    console.log('Uploading images:', files.length);
+    console.log('Current user:', user);
+    console.log('User authenticated:', !!user);
+    
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        // No authentication required for image upload
+
+        console.log('Uploading file to server:', file.name);
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api/v1'}/products/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Upload failed:', errorText);
+          throw new Error('Upload failed');
+        }
+
+        const result = await response.json();
+        console.log('Upload successful:', result);
+        
+        const imageUrl = result.imageUrl;
         setSelectedImages(prev => {
           const newImages = [...prev, imageUrl];
           form.setValue('images', newImages);
           return newImages;
         });
-      };
-      reader.readAsDataURL(file);
-    });
+        
+        toast({
+          title: "Image uploaded",
+          description: `Successfully uploaded ${file.name}`,
+        });
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast({
+          title: "Upload Error",
+          description: `Failed to upload ${file.name}`,
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const removeImage = (index: number) => {
