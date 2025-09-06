@@ -184,7 +184,7 @@ export const MyListings = () => {
                     </h3>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xl font-bold text-primary">
-                        ${listing.price}
+                      ₹{listing.price}
                       </span>
                       <span className="text-sm text-muted-foreground">
                         Listed {new Date(listing.createdAt).toLocaleDateString()}

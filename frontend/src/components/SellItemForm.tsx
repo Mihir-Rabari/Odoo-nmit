@@ -30,7 +30,7 @@ const sellItemSchema = z.object({
   description: z.string().min(20, 'Description must be at least 20 characters').max(1000, 'Description must be less than 1000 characters'),
   category: z.string().min(1, 'Please select a category'),
   condition: z.string().min(1, 'Please select item condition'),
-  price: z.number().min(0.01, 'Price must be greater than $0').max(99999, 'Price must be less than $100,000'),
+  price: z.number().min(0.01, 'Price must be greater than ₹0').max(99999, 'Price must be less than ₹100,000'),
   originalPrice: z.number().optional(),
   location: z.string().min(3, 'Location must be at least 3 characters').max(100, 'Location must be less than 100 characters'),
   images: z.array(z.string()).min(1, 'At least one image is required').max(5, 'Maximum 5 images allowed')

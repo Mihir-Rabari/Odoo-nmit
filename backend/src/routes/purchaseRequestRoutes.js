@@ -25,7 +25,7 @@ router.post('/', protect, async (req, res) => {
     }
 
     // Check if buyer is not the seller
-    if (product.seller._id.toString() === req.user.id) {
+    if (product.seller._id.toString() === req.user._id.toString()) {
       return res.status(400).json({ 
         message: 'You cannot make a purchase request for your own product' 
       });
@@ -34,7 +34,7 @@ router.post('/', protect, async (req, res) => {
     // Create purchase request
     const purchaseRequest = new PurchaseRequest({
       product: productId,
-      buyer: req.user.id,
+      buyer: req.user._id,
       seller: product.seller._id,
       message,
       offeredPrice,
@@ -61,8 +61,8 @@ router.post('/', protect, async (req, res) => {
 // Get purchase requests for seller (received requests)
 router.get('/received', protect, async (req, res) => {
   try {
-    console.log('Fetching received purchase requests for seller:', req.user.id);
-    const requests = await PurchaseRequest.find({ seller: req.user.id })
+    console.log('Fetching received purchase requests for seller:', req.user._id);
+    const requests = await PurchaseRequest.find({ seller: req.user._id })
       .populate('product', 'title price images')
       .populate('buyer', 'displayName email phone avatar')
       .sort({ createdAt: -1 });
@@ -81,8 +81,8 @@ router.get('/received', protect, async (req, res) => {
 // Get purchase requests made by buyer (sent requests)
 router.get('/sent', protect, async (req, res) => {
   try {
-    console.log('Fetching sent purchase requests for buyer:', req.user.id);
-    const requests = await PurchaseRequest.find({ buyer: req.user.id })
+    console.log('Fetching sent purchase requests for buyer:', req.user._id);
+    const requests = await PurchaseRequest.find({ buyer: req.user._id })
       .populate('product', 'title price images')
       .populate('seller', 'displayName email phone avatar')
       .sort({ createdAt: -1 });
@@ -118,13 +118,13 @@ router.patch('/:id/status', protect, async (req, res) => {
     }
 
     // Only seller can accept/reject, only buyer can mark as completed
-    if (status === 'completed' && purchaseRequest.buyer._id.toString() !== req.user.id) {
+    if (status === 'completed' && purchaseRequest.buyer._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ 
         message: 'Only the buyer can mark the request as completed' 
       });
     }
 
-    if (['accepted', 'rejected'].includes(status) && purchaseRequest.seller._id.toString() !== req.user.id) {
+    if (['accepted', 'rejected'].includes(status) && purchaseRequest.seller._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ 
         message: 'Only the seller can accept or reject the request' 
       });
@@ -158,7 +158,7 @@ router.get('/:id', protect, async (req, res) => {
     }
 
     // Check if user is either buyer or seller
-    const userId = req.user.id;
+    const userId = req.user._id.toString();
     if (purchaseRequest.buyer._id.toString() !== userId && 
         purchaseRequest.seller._id.toString() !== userId) {
       return res.status(403).json({ 
