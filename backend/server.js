@@ -19,10 +19,10 @@ app.use(express.json()); // For parsing application/json
 app.use(apiLimiter); // Apply rate limiting
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/users', userRoutes);
 
 const PORT = process.env.PORT || 5000;
 
