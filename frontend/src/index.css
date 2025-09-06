@@ -1,0 +1,176 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* EcoFinds Design System - Professional Sustainable Marketplace */
+
+@layer base {
+  :root {
+    /* EcoFinds Brand Palette - HSL Values */
+    --eco-deep: 106 22% 9%;        /* #182115 - Deep main background */
+    --eco-secondary: 140 15% 14%;   /* #21302B - Secondary backgrounds */
+    --eco-feature: 135 21% 35%;     /* #426648 - Feature cards, highlights */
+    --eco-primary: 45 49% 61%;      /* #DBAC61 - CTAs, primary buttons */
+    --eco-accent: 32 84% 24%;       /* #6D380D - Accents, alerts */
+    
+    /* Semantic Design Tokens */
+    --background: var(--eco-deep);
+    --foreground: 0 0% 98%;
+    
+    --card: var(--eco-secondary);
+    --card-foreground: 0 0% 95%;
+    
+    --popover: var(--eco-secondary);
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: var(--eco-primary);
+    --primary-foreground: var(--eco-deep);
+    
+    --secondary: var(--eco-feature);
+    --secondary-foreground: 0 0% 95%;
+    
+    --muted: var(--eco-secondary);
+    --muted-foreground: 0 0% 70%;
+    
+    --accent: var(--eco-accent);
+    --accent-foreground: 0 0% 95%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: var(--eco-feature);
+    --input: var(--eco-secondary);
+    --ring: var(--eco-primary);
+    
+    --radius: 0.75rem;
+    
+    /* Animation Variables */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --shadow-glow: 0 0 30px hsl(var(--eco-primary) / 0.15);
+    --shadow-card: 0 10px 25px -5px hsl(var(--eco-deep) / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter antialiased;
+    scroll-behavior: smooth;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Hero Button Variants */
+  .btn-hero {
+    @apply bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-xl 
+           hover:shadow-[0_0_30px_hsl(var(--eco-primary)/0.3)] 
+           transform hover:scale-105 transition-all duration-300 
+           border border-primary/20 hover:border-primary/40;
+  }
+  
+  .btn-secondary-hero {
+    @apply bg-secondary text-secondary-foreground font-semibold px-8 py-4 rounded-xl
+           hover:bg-secondary/80 transform hover:scale-105 transition-all duration-300
+           border border-secondary/30 hover:border-secondary/50;
+  }
+  
+  /* Feature Cards */
+  .feature-card {
+    @apply bg-card border border-border/20 rounded-2xl p-8 
+           hover:border-primary/30 hover:shadow-[0_10px_40px_hsl(var(--eco-primary)/0.1)]
+           transform hover:-translate-y-2 transition-all duration-500;
+  }
+  
+  /* Product Cards */  
+  .product-card {
+    @apply bg-card border border-border/10 rounded-xl overflow-hidden
+           hover:border-primary/20 hover:shadow-[0_8px_30px_hsl(var(--eco-primary)/0.08)]
+           transform hover:-translate-y-1 transition-all duration-300;
+  }
+  
+  /* Animated Underlines */
+  .link-underline {
+    @apply relative after:content-[''] after:absolute after:w-full after:h-0.5 
+           after:bottom-0 after:left-0 after:bg-primary after:origin-bottom-right 
+           after:scale-x-0 after:transition-transform after:duration-300 
+           hover:after:scale-x-100 hover:after:origin-bottom-left;
+  }
+  
+  /* Input Styling */
+  .input-eco {
+    @apply bg-input border border-border/30 rounded-lg px-4 py-3
+           focus:border-primary focus:ring-2 focus:ring-primary/20
+           transition-all duration-200 placeholder:text-muted-foreground;
+  }
+  
+  /* Loading Animation */
+  .pulse-glow {
+    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Counter Animation */
+  .counter-animate {
+    @apply inline-block tabular-nums;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 20px hsl(var(--eco-primary) / 0.1);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 40px hsl(var(--eco-primary) / 0.2);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fade-in-scale 0.5s ease-out forwards;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
