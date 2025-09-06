@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ShoppingBag, Plus, Minus, X, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CartItem } from '@/contexts/CartContext';
+import { api } from '@/lib/api';
 
 interface CartModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface CartModalProps {
   cartItems: CartItem[];
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemoveItem: (id: string) => void;
+  clearCart?: () => void;
 }
 
 export const CartModal = ({
@@ -20,7 +22,8 @@ export const CartModal = ({
   onClose,
   cartItems,
   onUpdateQuantity,
-  onRemoveItem
+  onRemoveItem,
+  clearCart
 }: CartModalProps) => {
   const { toast } = useToast();
 
@@ -45,23 +48,49 @@ export const CartModal = ({
     });
   };
 
-  const handleCheckout = () => {
-    toast({
-      title: "Checkout Started",
-      description: "Redirecting to checkout...",
-    });
-    // In a real app, this would redirect to checkout
-    onClose();
+  const handleCheckout = async () => {
+    try {
+      const orderData = {
+        products: cartItems.map(item => ({
+          product: item.id,
+          quantity: item.quantity
+        })),
+        shippingAddress: "Default Address" // In real app, would collect this from user
+      };
+
+      await api.createOrder(orderData);
+      
+      toast({
+        title: "Order Placed Successfully!",
+        description: "Your order has been confirmed and is being processed.",
+      });
+      
+      // Clear cart and close modal
+      if (clearCart) {
+        clearCart();
+      }
+      onClose();
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      toast({
+        title: "Checkout Failed",
+        description: "There was an error processing your order. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] bg-card">
+      <DialogContent className="max-w-2xl max-h-[90vh] bg-card" aria-describedby="cart-description">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <ShoppingBag className="w-5 h-5 text-primary" />
             <span>Shopping Cart ({cartItems.length})</span>
           </DialogTitle>
+          <p id="cart-description" className="sr-only">
+            Review and manage items in your shopping cart before checkout
+          </p>
         </DialogHeader>
 
         <div className="space-y-6">

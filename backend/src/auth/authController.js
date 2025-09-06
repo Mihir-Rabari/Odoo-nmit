@@ -19,7 +19,7 @@ const generateAuthTokens = (user) => {
 };
 
 const registerUser = async (req, res) => {
-  const { email, password, displayName, photoURL } = req.body;
+  const { email, password, displayName, photoURL, firstName, lastName } = req.body;
 
   try {
     // Check if user already exists
@@ -31,25 +31,25 @@ const registerUser = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
+    // Create user with default profile values
     const user = await User.create({
       email,
       password: hashedPassword,
       displayName,
       photoURL,
+      firstName: firstName || displayName.split(' ')[0] || 'User',
+      lastName: lastName || displayName.split(' ')[1] || 'Name',
     });
 
     const { accessToken, refreshToken } = generateAuthTokens(user);
 
+    // Return full user profile data
+    const userResponse = user.toJSON();
+    delete userResponse.password;
+
     res.status(201).json({
       message: 'User registered successfully',
-      user: {
-        _id: user._id,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        role: user.role,
-      },
+      user: userResponse,
       accessToken,
       refreshToken,
     });
@@ -76,15 +76,13 @@ const loginUser = async (req, res) => {
 
     const { accessToken, refreshToken } = generateAuthTokens(user);
 
+    // Return full user profile data
+    const userResponse = user.toJSON();
+    delete userResponse.password;
+
     res.status(200).json({
       message: 'Login successful',
-      user: {
-        _id: user._id,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        role: user.role,
-      },
+      user: userResponse,
       accessToken,
       refreshToken,
     });
@@ -93,4 +91,37 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser };
+const updateUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const updateData = req.body;
+    
+    // Remove sensitive fields that shouldn't be updated via this endpoint
+    delete updateData.password;
+    delete updateData._id;
+    delete updateData.role;
+    delete updateData.createdAt;
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { ...updateData, updatedAt: new Date() },
+      { new: true, runValidators: true }
+    );
+    
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const userResponse = updatedUser.toJSON();
+    delete userResponse.password;
+    
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      user: userResponse,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+module.exports = { registerUser, loginUser, updateUserProfile };

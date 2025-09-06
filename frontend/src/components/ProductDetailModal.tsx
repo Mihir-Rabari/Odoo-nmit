@@ -99,7 +99,10 @@ Our verified seller has an excellent track record with a ${product.seller.rating
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card" aria-describedby="product-description">
+        <div id="product-description" className="sr-only">
+          View detailed information about {product?.title || 'this product'} including images, pricing, seller information, and product details
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Images */}
           <div className="space-y-4">

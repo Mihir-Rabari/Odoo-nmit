@@ -25,7 +25,8 @@ app.use(cors({
   ].filter(Boolean),
   credentials: true
 }));
-app.use(express.json()); // For parsing application/json
+app.use(express.json({ limit: '50mb' })); // For parsing application/json with larger limit
+app.use(express.urlencoded({ limit: '50mb', extended: true })); // For parsing form data
 app.use(apiLimiter); // Apply rate limiting
 
 // Routes

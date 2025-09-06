@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { User, Edit, Camera, Star, Shield, MapPin, Mail, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { api } from '@/lib/api';
 
 const profileSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -45,13 +46,26 @@ export const ProfileSection = () => {
     }
   });
 
-  const onSubmit = (data: ProfileForm) => {
-    updateUser(data);
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been successfully updated.",
-    });
-    setIsEditing(false);
+  const onSubmit = async (data: ProfileForm) => {
+    try {
+      // Update user via API
+      await api.updateUserProfile(data);
+      
+      // Update local user state
+      updateUser(data);
+      
+      toast({
+        title: "Profile Updated",
+        description: "Your profile information has been successfully updated.",
+      });
+      setIsEditing(false);
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating your profile. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAvatarChange = () => {

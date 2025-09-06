@@ -10,7 +10,7 @@ class ApiClient {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('accessToken');
 
     const config: RequestInit = {
       headers: {
@@ -92,8 +92,8 @@ class ApiClient {
     return this.request('/users/profile');
   }
 
-  async updateUserProfile(userData: { displayName?: string; photoURL?: string }) {
-    return this.request('/users/profile', {
+  async updateUserProfile(userData: any) {
+    return this.request('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(userData),
     });

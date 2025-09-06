@@ -8,23 +8,23 @@ import { Link } from 'react-router-dom';
 import { formatPrice } from '@/lib/currency';
 
 interface ProductCardProps {
-  id: number;
+  id: string;
   title: string;
   price: number;
   originalPrice?: number;
   category: string;
-  location: string;
-  timeAgo: string;
-  rating: number;
+  location?: string;
+  timeAgo?: string;
+  rating?: number;
   imageUrl: string;
-  seller: {
+  seller?: {
     name: string;
     rating: number;
     verified: boolean;
   };
-  condition: 'excellent' | 'good' | 'fair';
-  onAddToCart?: (id: number) => void;
-  onToggleFavorite?: (id: number) => void;
+  condition?: 'excellent' | 'good' | 'fair';
+  onAddToCart?: (id: string) => void;
+  onToggleFavorite?: (id: string) => void;
   onCardClick?: (product: ProductCardProps) => void;
   isFavorite?: boolean;
 }
@@ -135,7 +135,7 @@ export const ProductCard = ({
             <div className="flex items-center space-x-1">
               <Star className="w-4 h-4 text-primary fill-primary" />
               <span className="text-sm font-medium text-foreground">
-                {rating.toFixed(1)}
+                {rating ? rating.toFixed(1) : '5.0'}
               </span>
             </div>
           </div>
@@ -149,13 +149,13 @@ export const ProductCard = ({
             </span>
             <div className="flex items-center space-x-1">
               <Clock className="w-3 h-3" />
-              <span>{timeAgo}</span>
+              <span>{timeAgo || 'Recently'}</span>
             </div>
           </div>
           
           <div className="flex items-center space-x-1">
             <MapPin className="w-3 h-3" />
-            <span>{location}</span>
+            <span>{location || 'Local'}</span>
           </div>
         </div>
 

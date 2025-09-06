@@ -28,8 +28,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create a product (Admin only)
-router.post('/', protect, authorize('admin'), async (req, res) => {
+// Create a product (Users and Admin)
+router.post('/', protect, authorize('user', 'admin'), async (req, res) => {
   const { name, description, price, category, imageUrl, stock } = req.body;
   try {
     const product = new Product({
@@ -39,7 +39,7 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
       category,
       imageUrl,
       stock,
-      seller: req.user._id, // Seller is the logged-in admin user
+      seller: req.user._id, // Seller is the logged-in user
     });
     const createdProduct = await product.save();
     res.status(201).json(createdProduct);
@@ -48,12 +48,17 @@ router.post('/', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Update a product (Admin only)
-router.put('/:id', protect, authorize('admin'), async (req, res) => {
+// Update a product (Owner or Admin only)
+router.put('/:id', protect, async (req, res) => {
   const { name, description, price, category, imageUrl, stock } = req.body;
   try {
     const product = await Product.findById(req.params.id);
     if (product) {
+      // Check if user is the seller or an admin
+      if (product.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not authorized to update this product' });
+      }
+      
       product.name = name || product.name;
       product.description = description || product.description;
       product.price = price || product.price;
@@ -71,11 +76,16 @@ router.put('/:id', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-// Delete a product (Admin only)
-router.delete('/:id', protect, authorize('admin'), async (req, res) => {
+// Delete a product (Owner or Admin only)
+router.delete('/:id', protect, async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (product) {
+      // Check if user is the seller or an admin
+      if (product.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not authorized to delete this product' });
+      }
+      
       await product.deleteOne();
       res.json({ message: 'Product removed' });
     } else {

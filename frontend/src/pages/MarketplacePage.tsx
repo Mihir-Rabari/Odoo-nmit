@@ -10,6 +10,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { api, transformProductToFrontend } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/contexts/CartContext';
 
 // Sample marketplace data
 const categories = ['All Categories', 'Furniture', 'Electronics', 'Fashion', 'Books', 'Music', 'Home & Garden', 'Sports', 'Toys'];
@@ -112,6 +113,7 @@ const sampleProducts = [{
 export const MarketplacePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addToCart } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [sortBy, setSortBy] = useState('newest');
@@ -121,7 +123,7 @@ export const MarketplacePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   // Fetch products from API
   useEffect(() => {
@@ -135,11 +137,10 @@ export const MarketplacePage = () => {
         console.error('Failed to fetch products:', error);
         toast({
           title: "Error",
-          description: "Failed to load products. Using sample data.",
+          description: "Failed to load products from server.",
           variant: "destructive",
         });
-        // Fallback to sample data if API fails
-        setAllProducts(sampleProducts);
+        setAllProducts([]);
       } finally {
         setIsLoading(false);
       }
@@ -183,10 +184,23 @@ export const MarketplacePage = () => {
     
     setFilteredProducts(filtered);
   }, [allProducts, searchQuery, selectedCategory, sortBy]);
-  const handleAddToCart = (id: number) => {
-    console.log('Added to cart:', id);
+  const handleAddToCart = (id: string) => {
+    const product = allProducts.find(p => p.id === id);
+    if (product) {
+      addToCart({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        seller: product.seller?.name || 'Unknown Seller',
+      });
+      toast({
+        title: "Added to Cart",
+        description: `${product.title} has been added to your cart`,
+      });
+    }
   };
-  const handleToggleFavorite = (id: number) => {
+  const handleToggleFavorite = (id: string) => {
     setFavorites(prev => prev.includes(id) ? prev.filter(fav => fav !== id) : [...prev, id]);
   };
   const handleProductClick = (product: any) => {

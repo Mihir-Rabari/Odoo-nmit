@@ -15,8 +15,48 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  firstName: {
+    type: String,
+    required: true,
+  },
+  lastName: {
+    type: String,
+    required: true,
+  },
   photoURL: {
     type: String,
+  },
+  avatar: {
+    type: String,
+  },
+  phone: {
+    type: String,
+  },
+  location: {
+    type: String,
+    default: 'Not specified',
+  },
+  bio: {
+    type: String,
+    maxlength: 500,
+  },
+  verified: {
+    type: Boolean,
+    default: false,
+  },
+  rating: {
+    type: Number,
+    default: 5.0,
+    min: 0,
+    max: 5,
+  },
+  totalSales: {
+    type: Number,
+    default: 0,
+  },
+  totalPurchases: {
+    type: Number,
+    default: 0,
   },
   role: {
     type: String,
@@ -32,5 +72,13 @@ const userSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// Add virtual for memberSince
+userSchema.virtual('memberSince').get(function() {
+  return this.createdAt.getFullYear().toString();
+});
+
+// Ensure virtual fields are serialized
+userSchema.set('toJSON', { virtuals: true });
 
 module.exports = mongoose.model('User', userSchema);

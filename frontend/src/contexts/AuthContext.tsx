@@ -7,6 +7,17 @@ interface User {
   displayName: string;
   photoURL?: string;
   role: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  location: string;
+  bio?: string;
+  avatar?: string;
+  verified?: boolean;
+  rating: number;
+  memberSince: string;
+  totalSales: number;
+  totalPurchases: number;
 }
 
 interface AuthContextType {
@@ -16,6 +27,7 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   isAuthenticated: boolean;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,6 +100,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('refreshToken');
   };
 
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   const value = {
     user,
     login,
@@ -95,6 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     loading,
     isAuthenticated: !!user,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

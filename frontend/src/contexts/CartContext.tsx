@@ -30,7 +30,11 @@ interface CartProviderProps {
 }
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    // Load cart from localStorage on initialization
+    const savedCart = localStorage.getItem('cart');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
   const { toast } = useToast();
 
   const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -38,19 +42,24 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const addToCart = (newItem: Omit<CartItem, 'quantity'>) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.id === newItem.id);
+      let updatedCart;
       if (existingItem) {
-        return prev.map(item =>
+        updatedCart = prev.map(item =>
           item.id === newItem.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
+      } else {
+        updatedCart = [...prev, { ...newItem, quantity: 1 }];
       }
-      return [...prev, { ...newItem, quantity: 1 }];
+      // Save to localStorage
+      localStorage.setItem('cart', JSON.stringify(updatedCart));
+      return updatedCart;
     });
-    
+
     toast({
       title: "Added to Cart",
-      description: `${newItem.title} has been added to your cart`,
+      description: `${newItem.title} has been added to your cart.`,
     });
   };
 
@@ -59,19 +68,26 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       removeItem(id);
       return;
     }
-    setCartItems(prev =>
-      prev.map(item =>
+    setCartItems(prev => {
+      const updatedCart = prev.map(item =>
         item.id === id ? { ...item, quantity } : item
-      )
-    );
+      );
+      localStorage.setItem('cart', JSON.stringify(updatedCart));
+      return updatedCart;
+    });
   };
 
   const removeItem = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
+    setCartItems(prev => {
+      const updatedCart = prev.filter(item => item.id !== id);
+      localStorage.setItem('cart', JSON.stringify(updatedCart));
+      return updatedCart;
+    });
   };
 
   const clearCart = () => {
     setCartItems([]);
+    localStorage.removeItem('cart');
   };
 
   const checkout = async () => {

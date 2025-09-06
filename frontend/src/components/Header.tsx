@@ -28,7 +28,8 @@ export const Header = () => {
     cartItems,
     cartItemCount,
     updateQuantity,
-    removeItem
+    removeItem,
+    clearCart
   } = useCart();
   useEffect(() => {
     const handleScroll = () => {
@@ -176,10 +177,13 @@ export const Header = () => {
           </div>}
       </div>
 
-      <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onUpdateQuantity={updateQuantity} onRemoveItem={removeItem} />
+      <CartModal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} onUpdateQuantity={updateQuantity} onRemoveItem={removeItem} clearCart={clearCart} />
 
       <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="profile-description">
+          <div id="profile-description" className="sr-only">
+            Manage your profile information and account settings
+          </div>
           <ProfileSection />
         </DialogContent>
       </Dialog>

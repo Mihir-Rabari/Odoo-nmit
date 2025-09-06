@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Upload, X, DollarSign, MapPin, Tag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const categories = [
   'Furniture', 'Electronics', 'Fashion', 'Books', 'Music', 
@@ -38,7 +40,9 @@ type SellItemForm = z.infer<typeof sellItemSchema>;
 
 export const SellItemForm = () => {
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm<SellItemForm>({
     resolver: zodResolver(sellItemSchema),
@@ -48,7 +52,7 @@ export const SellItemForm = () => {
       category: '',
       condition: '',
       price: 0,
-      originalPrice: undefined,
+      originalPrice: 0,
       location: '',
       images: []
     }
@@ -88,16 +92,48 @@ export const SellItemForm = () => {
     });
   };
 
-  const onSubmit = (data: SellItemForm) => {
-    console.log('Form submitted:', data);
-    toast({
-      title: "Item listed successfully!",
-      description: "Your item has been added to the marketplace",
-    });
-    
-    // Reset form
-    form.reset();
-    setSelectedImages([]);
+  const onSubmit = async (data: SellItemForm) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to sell items",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Create product data for backend
+      const productData = {
+        name: data.title,
+        description: data.description,
+        price: data.price,
+        category: data.category,
+        imageUrl: data.images[0] || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=800&fit=crop',
+        stock: 1,
+      };
+
+      await api.createProduct(productData);
+      
+      toast({
+        title: "Item listed successfully!",
+        description: "Your item has been added to the marketplace",
+      });
+      
+      // Reset form
+      form.reset();
+      setSelectedImages([]);
+    } catch (error) {
+      console.error('Failed to create product:', error);
+      toast({
+        title: "Error",
+        description: "Failed to list your item. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -321,9 +357,9 @@ export const SellItemForm = () => {
             <Button
               type="submit"
               className="w-full btn-hero"
-              disabled={form.formState.isSubmitting}
+              disabled={isSubmitting}
             >
-              {form.formState.isSubmitting ? 'Listing Item...' : 'List Item for Sale'}
+              {isSubmitting ? 'Listing Item...' : 'List Item for Sale'}
             </Button>
           </form>
         </Form>
